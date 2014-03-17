@@ -8,8 +8,9 @@ namespace GamePredictor
 {
     public interface IRatingPredictor
     {
-        void Observe(int player1ID, int player2ID, double resultForPlayer1, double time);
-        double GetRating(int playerID);
-        double PredictGameResult(int player1ID, int player2ID);
+        void Initialize(int playerCount);
+        void Train(IList<IGame> games);
+        double GetRating(int playerIndex);
+        double PredictGameResult(int player1Index, int player2Index);
     }
 }
