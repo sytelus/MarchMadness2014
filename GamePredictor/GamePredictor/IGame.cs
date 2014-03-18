@@ -22,6 +22,6 @@ namespace GamePredictor
         /// 1. Get difference of average game outcomes for games with advantage and without advantage.
         /// 2. Get the rating difference by solving logistic equation.
         /// </summary>
-       double Player1Advantage {get;}
+       bool? Player1HasAdvantage {get;}
     }
 }

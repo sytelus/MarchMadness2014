@@ -31,6 +31,7 @@
             this.buttonMain = new System.Windows.Forms.Button();
             this.buttonCalibrateRegularization = new System.Windows.Forms.Button();
             this.buttonHomeAdvantage = new System.Windows.Forms.Button();
+            this.buttonCalibrateHomeAdvantage = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // buttonMain
@@ -65,11 +66,23 @@
             this.buttonHomeAdvantage.UseVisualStyleBackColor = true;
             this.buttonHomeAdvantage.Click += new System.EventHandler(this.buttonHomeAdvantage_Click);
             // 
+            // buttonCalibrateHomeAdvantage
+            // 
+            this.buttonCalibrateHomeAdvantage.Location = new System.Drawing.Point(242, 140);
+            this.buttonCalibrateHomeAdvantage.Margin = new System.Windows.Forms.Padding(4);
+            this.buttonCalibrateHomeAdvantage.Name = "buttonCalibrateHomeAdvantage";
+            this.buttonCalibrateHomeAdvantage.Size = new System.Drawing.Size(195, 50);
+            this.buttonCalibrateHomeAdvantage.TabIndex = 3;
+            this.buttonCalibrateHomeAdvantage.Text = "Calibrate Home Advantage";
+            this.buttonCalibrateHomeAdvantage.UseVisualStyleBackColor = true;
+            this.buttonCalibrateHomeAdvantage.Click += new System.EventHandler(this.buttonCalibrateHomeAdvantage_Click);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(773, 466);
+            this.Controls.Add(this.buttonCalibrateHomeAdvantage);
             this.Controls.Add(this.buttonHomeAdvantage);
             this.Controls.Add(this.buttonCalibrateRegularization);
             this.Controls.Add(this.buttonMain);
@@ -86,6 +99,7 @@
         private System.Windows.Forms.Button buttonMain;
         private System.Windows.Forms.Button buttonCalibrateRegularization;
         private System.Windows.Forms.Button buttonHomeAdvantage;
+        private System.Windows.Forms.Button buttonCalibrateHomeAdvantage;
     }
 }
 

@@ -12,16 +12,19 @@ namespace GamePredictor
         double[] ratings;
         IDictionary<string, int> playerIndices;
 
-        public const int DefaultMaxIterations = 50;
-        public const int RansomSeed = 421;
-        public const double DefaultRegularizationFactor = 0.22766315789473687;
+        public const int DefaultMaxIterations = 600; //400 optimal for NCAA baseball, 50 for Chase
+        public const int RansomSeed = 42;
+        public const double DefaultRegularizationFactor = 0.2256;
+        public const double DefaultPlayer1Advantage = 0;
 
         private int maxIterations;
         private double regularizationFactor;
-        public EloPlusPlusPredictor(double regularizationFactor = DefaultRegularizationFactor, int maxIterations = DefaultMaxIterations)
+        private double player1Advantage;
+        public EloPlusPlusPredictor(double regularizationFactor = DefaultRegularizationFactor, int maxIterations = DefaultMaxIterations, double player1Advantage = DefaultPlayer1Advantage)
         {
             this.regularizationFactor = regularizationFactor;
             this.maxIterations = maxIterations;
+            this.player1Advantage = player1Advantage;
         }
 
         public void Train(IList<IGame> games)
@@ -45,7 +48,7 @@ namespace GamePredictor
                     var player1Index = this.playerIndices[game.Player1Id];
                     var player2Index = this.playerIndices[game.Player2Id];
 
-                    var predicted = PredictGameResult(player1Index, player2Index, game.Player1Advantage);
+                    var predicted = PredictGameResult(player1Index, player2Index, game.Player1HasAdvantage.IsTrue() ? this.player1Advantage : 0);
                     var actual = game.ResultForPlayer1;
                     var update = game.Weight * (predicted - actual) * predicted * (1 - predicted);
                     var regularization1 = regularizationFactor * (this.ratings[player1Index] - neighbourWeightedAverage[player1Index]) / neighbourWeightSum[player1Index];
