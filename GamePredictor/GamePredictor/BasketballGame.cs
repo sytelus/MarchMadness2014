@@ -48,6 +48,8 @@ namespace GamePredictor
             this.Player1Id = this.WinningTeamID.ToStringInvariant();
             this.Player2Id = this.LoosingTeamID.ToStringInvariant();
             this.ResultForPlayer1 = 1 / (1 + Math.Pow(Math.E, -(this.WinningTeamScore - this.LoosingTeamScore)));
+            //Below value is found by trial & error
+            this.Player1Advantage = this.IsWinningTeamHome.IsTrue() ? -0.3 : 0;// (this.IsWinningTeamHome.IsFalse() ? 0.3 : 0);
         }
 
         private int? ParseOvertimePeriods(string value)
@@ -79,10 +81,7 @@ namespace GamePredictor
             get { return 1; }
         }
 
-        public double Player1Advantage
-        {
-            get { return 0; }
-        }
+        public double Player1Advantage {get; private set; }
         #endregion
     }
 }

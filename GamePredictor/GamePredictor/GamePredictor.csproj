@@ -45,6 +45,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AlwaysDrawPredictor.cs" />
+    <Compile Include="PredictionErrorStats.cs" />
     <Compile Include="EloPlusPlusPredictor.cs" />
     <Compile Include="BasketballGame.cs" />
     <Compile Include="GameResultParser.cs" />

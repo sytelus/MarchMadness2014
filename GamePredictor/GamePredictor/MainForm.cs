@@ -21,35 +21,36 @@ namespace GamePredictor
 
         private void buttonMain_Click(object sender, EventArgs e)
         {
-            Dictionary<string, double> rmseBySeasons = new Dictionary<string, double>();
+            Dictionary<string, PredictionErrorStats> rmseBySeasons = new Dictionary<string, PredictionErrorStats>();
             foreach(var seasonGamesKvp in tourneyGamesBySeasons.GamesBySeasons)
             {
                 var predictor = new EloPlusPlusPredictor(); //new TeamSeedPredictor(this.teamSeedsBySeason[seasonGamesKvp.Key]);
                 var trainGames = regularGamesBySeasons.GamesBySeasons[seasonGamesKvp.Key];
                 var testGames = seasonGamesKvp.Value;
-                var rmse = GetRmse(trainGames, testGames, predictor);
-                rmseBySeasons[seasonGamesKvp.Key] = rmse;
+                var errorStats = GetPredictionErrorStats(trainGames, testGames, predictor);
+                rmseBySeasons[seasonGamesKvp.Key] = errorStats;
             }
 
-            var avgRmse = rmseBySeasons.Average(kvp => kvp.Value);
+            var avgRmse = rmseBySeasons.Average(kvp => kvp.Value.GetRmse());
+            var avgLogLoss = rmseBySeasons.Average(kvp => kvp.Value.GetLogLoss());
 
-            Clipboard.SetData(DataFormats.Text, avgRmse.ToStringInvariant());
-            MessageBox.Show("Avg RMSE = {0}".FormatEx(avgRmse));
+            Clipboard.SetData(DataFormats.Text, string.Concat(avgRmse.ToStringInvariant(), "\t", avgLogLoss));
+            MessageBox.Show("Avg RMSE = {0}, Avg LogLoss = {1}".FormatEx(avgRmse, avgLogLoss));
         }
 
-        private double GetRmse(IList<IGame> trainGames, IList<IGame> testGames, IRatingPredictor predictor)
+        private PredictionErrorStats GetPredictionErrorStats(IList<IGame> trainGames, IList<IGame> testGames, IRatingPredictor predictor)
         {
             predictor.Train(trainGames);
 
-            double totalErrorSquare = 0;
+            var errorStats = new PredictionErrorStats();
             foreach (var testGame in testGames)
             {
                 var predicted = predictor.PredictGameResult(testGame.Player1Id, testGame.Player2Id);
                 var actual = testGame.ResultForPlayer1;
-                totalErrorSquare += (actual - predicted) * (actual - predicted);
+                errorStats.Observe(actual, predicted);
             }
 
-            return Math.Sqrt(totalErrorSquare / testGames.Count);
+            return errorStats;
         }
 
 
@@ -102,7 +103,7 @@ namespace GamePredictor
                 var testSet = games.Where((g, i) => i >= testSetStart && i < testSetEnd &&
                     knownPlayers.Contains(g.Player1Id) && knownPlayers.Contains(g.Player2Id)).ToArray();
 
-                totalRmse += GetRmse(trainSet, testSet, predictor);
+                totalRmse += GetPredictionErrorStats(trainSet, testSet, predictor).GetRmse();
             }
 
             return totalRmse / foldsCount;
@@ -137,6 +138,22 @@ namespace GamePredictor
         {
             var optimalRs = regularGamesBySeasons.GamesBySeasons.Values.Select(gs => this.GetOptimalRegularizationFactor(gs)).ToArray();
             MessageBox.Show(optimalRs.Average().ToString());
+        }
+
+        private double RatingBoostForHomeTeam(IList<BasketballGame> games)
+        {
+            var avgOutComeForHomeTeam = games.Where(g => g.IsWinningTeamHome.IsTrue()).Average(g => g.ResultForPlayer1);
+            var avgOutComeForAwayTeam = games.Where(g => g.IsWinningTeamHome.IsFalse()).Average(g => g.ResultForPlayer1);
+
+            return avgOutComeForHomeTeam - avgOutComeForAwayTeam;
+        }
+
+        private void buttonHomeAdvantage_Click(object sender, EventArgs e)
+        {
+            var boost = this.regularGamesBySeasons.GamesBySeasons.Values.Select(games => games.Select(g => (BasketballGame)g).ToArray())
+                .Select(games => RatingBoostForHomeTeam(games))
+                .Average();
+            MessageBox.Show(boost.ToStringInvariant());
         }
     }
 }
