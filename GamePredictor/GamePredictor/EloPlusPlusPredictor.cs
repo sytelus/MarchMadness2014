@@ -13,7 +13,7 @@ namespace GamePredictor
         IDictionary<string, int> playerIndices;
 
         public const int DefaultMaxIterations = 50;
-        public const int RansomSeed = 42;
+        public const int RansomSeed = 421;
         public const double DefaultRegularizationFactor = 0.22766315789473687;
 
         private int maxIterations;

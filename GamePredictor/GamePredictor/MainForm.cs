@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using CommonUtils;
+using System.IO;
 
 namespace GamePredictor
 {
@@ -23,7 +24,7 @@ namespace GamePredictor
             Dictionary<string, double> rmseBySeasons = new Dictionary<string, double>();
             foreach(var seasonGamesKvp in tourneyGamesBySeasons.GamesBySeasons)
             {
-                var predictor = new EloPlusPlusPredictor();
+                var predictor = new EloPlusPlusPredictor(); //new TeamSeedPredictor(this.teamSeedsBySeason[seasonGamesKvp.Key]);
                 var trainGames = regularGamesBySeasons.GamesBySeasons[seasonGamesKvp.Key];
                 var testGames = seasonGamesKvp.Value;
                 var rmse = GetRmse(trainGames, testGames, predictor);
@@ -107,12 +108,29 @@ namespace GamePredictor
             return totalRmse / foldsCount;
         }
 
+        private IDictionary<string, IDictionary<string, int>> TeamSeedsParser(string filePath)
+        {
+            return File.ReadAllLines(filePath).Select(line => line.Split(Utils.CommaDelimiter)).Skip(1)
+                .GroupBy(columns => columns[0])
+                .Select(g => new KeyValuePair<string, IDictionary<string, int>>(g.Key, 
+                    g.Select(c => new KeyValuePair<string, int>(c[2], ParseSeedColumn(c[1]))).ToDictionary()))
+                .ToDictionary();
+        }
+
+        private static int ParseSeedColumn(string value)
+        {
+            value = new string(value.Where(c => char.IsNumber(c)).ToArray());
+            return int.Parse(value);
+        }
+
         GameResultParser regularGamesBySeasons;
         GameResultParser tourneyGamesBySeasons;
+        IDictionary<string, IDictionary<string, int>> teamSeedsBySeason;
         private void MainForm_Load(object sender, EventArgs e)
         {
             regularGamesBySeasons = new GameResultParser(@"..\..\..\..\data\kaggle\regular_season_results.csv");
             tourneyGamesBySeasons = new GameResultParser(@"..\..\..\..\data\kaggle\tourney_results.csv");
+            teamSeedsBySeason = TeamSeedsParser(@"..\..\..\..\data\kaggle\tourney_seeds.csv");
         }
 
         private void buttonCalibrateRegularization_Click(object sender, EventArgs e)
