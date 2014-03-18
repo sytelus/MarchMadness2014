@@ -7,7 +7,7 @@ using CommonUtils;
 
 namespace GamePredictor
 {
-    public class Game
+    public class BasketballGame : IGame
     {
         public string Season { get; private set; }
         public int DayNumber { get; private set; }
@@ -18,7 +18,7 @@ namespace GamePredictor
         public bool? IsWinningTeamHome { get; private set; }
         public int? OvertimePeriods { get; private set; }
 
-        public Game(string[] valueColumns, string[] headerColumns)
+        public BasketballGame(string[] valueColumns, string[] headerColumns)
         {
             for(var headerIndex = 0; headerIndex < headerColumns.Length; headerIndex++)
             {
@@ -44,6 +44,10 @@ namespace GamePredictor
                         throw new ArgumentException("Header column value '{0}' is not recognized".FormatEx(headerColumns[headerIndex]));
                 }
             }
+
+            this.Player1Id = this.WinningTeamID.ToStringInvariant();
+            this.Player2Id = this.LoosingTeamID.ToStringInvariant();
+            this.ResultForPlayer1 = 1 / (1 + Math.Pow(Math.E, -(this.WinningTeamScore - this.LoosingTeamScore)));
         }
 
         private int? ParseOvertimePeriods(string value)
@@ -65,5 +69,20 @@ namespace GamePredictor
                     throw new ArgumentException("Home location column value '{0}' can't be parsed".FormatEx(value));
             }
         }
+
+        #region IGame
+        public string Player1Id {get; private set; }
+        public string Player2Id { get; private set; }
+        public double ResultForPlayer1 { get; private set; }
+        public double Weight
+        {
+            get { return 1; }
+        }
+
+        public double Player1Advantage
+        {
+            get { return 0; }
+        }
+        #endregion
     }
 }

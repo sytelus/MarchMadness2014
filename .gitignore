@@ -27,7 +27,6 @@ _ReSharper*/
 ~$*
 
 #PII/large files
-data/
 App_Data/
 
 #JS build

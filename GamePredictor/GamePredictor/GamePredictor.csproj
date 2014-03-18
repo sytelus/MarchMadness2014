@@ -44,10 +44,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AlwaysDrawPredictor.cs" />
     <Compile Include="EloPlusPlusPredictor.cs" />
-    <Compile Include="Game.cs" />
+    <Compile Include="BasketballGame.cs" />
     <Compile Include="GameResultParser.cs" />
-    <Compile Include="Games.cs" />
     <Compile Include="IGame.cs" />
     <Compile Include="IRatingPredictor.cs" />
     <Compile Include="MainForm.cs">

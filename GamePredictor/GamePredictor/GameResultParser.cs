@@ -10,10 +10,10 @@ namespace GamePredictor
 {
     public class GameResultParser
     {
-        public IDictionary<string, List<Game>> GamesBySeasons {get; private set;}
+        public IDictionary<string, List<IGame>> GamesBySeasons { get; private set; }
         public GameResultParser(string filePath)
         {
-            this.GamesBySeasons = new Dictionary<string, List<Game>>();
+            this.GamesBySeasons = new Dictionary<string, List<IGame>>();
 
             using(var file = File.OpenText(filePath))
             {
@@ -24,9 +24,9 @@ namespace GamePredictor
                 {
                     var columns = line.Split(Utils.CommaDelimiter);
 
-                    var game = new Game(columns, headerColumns);
+                    var game = new BasketballGame(columns, headerColumns);
 
-                    GamesBySeasons.AddToDictionarySet(game.Season, game);
+                    GamesBySeasons.AddToDictionarySet(game.Season, (IGame)game);
 
                     line = file.ReadLine();
                 }
