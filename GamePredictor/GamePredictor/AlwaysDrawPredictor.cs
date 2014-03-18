@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace GamePredictor
 {
-    public class AlwaysDrawPredictor : IRatingPredictor
+    public class AlwaysDrawPredictor : IGameLearner
     {
 
         public void Train(IList<IGame> games)

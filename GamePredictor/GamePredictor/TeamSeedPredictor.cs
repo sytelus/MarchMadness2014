@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace GamePredictor
 {
-    public class TeamSeedPredictor : IRatingPredictor
+    public class TeamSeedPredictor : IGameLearner
     {
         IDictionary<string, int> teamSeeds;
         public TeamSeedPredictor(IDictionary<string, int> teamSeeds)

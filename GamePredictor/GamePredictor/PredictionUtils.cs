@@ -9,7 +9,7 @@ namespace GamePredictor
 {
     public static class PredictionUtils
     {
-        public static PredictionErrorStats GetPredictionErrorStats(IList<IGame> trainGames, IList<IGame> testGames, IRatingPredictor predictor)
+        public static PredictionErrorStats GetPredictionErrorStats(IList<IGame> trainGames, IList<IGame> testGames, IGameLearner predictor)
         {
             predictor.Train(trainGames);
 
@@ -25,7 +25,7 @@ namespace GamePredictor
         }
 
         public static double SweepParameter(IList<IGame> games, double lowR, double highR,
-            Func<double, IRatingPredictor> getPredictorForParameter, double minDelta = 0.01, double intervals = 10)
+            Func<double, IGameLearner> getPredictorForParameter, double minDelta = 0.01, double intervals = 10)
         {
             var increment = (highR - lowR) / intervals;
             if (increment < minDelta)
@@ -55,7 +55,7 @@ namespace GamePredictor
                 getPredictorForParameter, minDelta, intervals);
         }
 
-        public static double GetCrossValidationErrorStats(IList<IGame> games, IRatingPredictor predictor, int foldsCount = 4)
+        public static double GetCrossValidationErrorStats(IList<IGame> games, IGameLearner predictor, int foldsCount = 4)
         {
             var foldSize = games.Count / foldsCount;
 

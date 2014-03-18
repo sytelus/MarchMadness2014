@@ -21,10 +21,10 @@ namespace GamePredictor
 
         private void buttonMain_Click(object sender, EventArgs e)
         {
-            Dictionary<string, PredictionErrorStats> rmseBySeasons = new Dictionary<string, PredictionErrorStats>();
+            var rmseBySeasons = new Dictionary<string, PredictionErrorStats>();
             foreach(var seasonGamesKvp in tourneyGamesBySeasons.GamesBySeasons)
             {
-                var predictor = new EloPlusPlusPredictor(player1Advantage: -0.0105263157894739); // new TeamSeedPredictor(this.teamSeedsBySeason[seasonGamesKvp.Key]);
+                var predictor = new EloPlusPlusLearner(player1Advantage: -0.0105263157894739); // new TeamSeedPredictor(this.teamSeedsBySeason[seasonGamesKvp.Key]);
                 var trainGames = regularGamesBySeasons.GamesBySeasons[seasonGamesKvp.Key];
                 var testGames = seasonGamesKvp.Value;
                 var errorStats = PredictionUtils.GetPredictionErrorStats(trainGames, testGames, predictor);
@@ -66,7 +66,7 @@ namespace GamePredictor
         private void buttonCalibrateRegularization_Click(object sender, EventArgs e)
         {
             var optimalRs = regularGamesBySeasons.GamesBySeasons.Values
-                .Select(gs => PredictionUtils.SweepParameter(gs, 0.01, 0.99, (r) => new EloPlusPlusPredictor(r))).ToArray();
+                .Select(gs => PredictionUtils.SweepParameter(gs, 0.01, 0.99, (r) => new EloPlusPlusLearner(r))).ToArray();
             MessageBox.Show(optimalRs.Average().ToString());
         }
 
@@ -89,7 +89,7 @@ namespace GamePredictor
         private void buttonCalibrateHomeAdvantage_Click(object sender, EventArgs e)
         {
             var optimalRs = regularGamesBySeasons.GamesBySeasons.Values
-                .Select(gs => PredictionUtils.SweepParameter(gs, -4, 4, (r) => new EloPlusPlusPredictor(player1Advantage: r))).ToArray();
+                .Select(gs => PredictionUtils.SweepParameter(gs, -4, 4, (r) => new EloPlusPlusLearner(player1Advantage: r))).ToArray();
             MessageBox.Show(optimalRs.Average().ToString());
         }
     }

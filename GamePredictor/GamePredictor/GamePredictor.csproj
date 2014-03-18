@@ -21,6 +21,8 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -45,12 +47,14 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AlwaysDrawPredictor.cs" />
+    <Compile Include="SFLearner.cs" />
+    <Compile Include="PlayerProfile.cs" />
     <Compile Include="PredictionErrorStats.cs" />
-    <Compile Include="EloPlusPlusPredictor.cs" />
+    <Compile Include="EloPlusPlusLearner.cs" />
     <Compile Include="BasketballGame.cs" />
     <Compile Include="GameResultParser.cs" />
     <Compile Include="IGame.cs" />
-    <Compile Include="IRatingPredictor.cs" />
+    <Compile Include="IGameLearner.cs" />
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -92,6 +96,7 @@
       <Name>CommonUtils</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
