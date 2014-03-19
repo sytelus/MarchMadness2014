@@ -8,6 +8,7 @@
 *.suo
 *.sln.DotSettings.user
 [Oo]bj/
+[Bb]in/
 *.scc
 Web.Release.Config
 *.publishsettings

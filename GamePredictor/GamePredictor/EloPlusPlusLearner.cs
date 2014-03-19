@@ -11,7 +11,7 @@ namespace GamePredictor
     {
         double[] ratings;
 
-        public const int DefaultMaxIterations = 600; //400 optimal for NCAA baseball, 50 for Chase
+        public const int DefaultMaxIterations = 100; //400 optimal for NCAA baseball, 50 for Chase
         public const int RansomSeed = 42;
         public const double DefaultRegularizationFactor = 0.2256;
 
@@ -46,7 +46,7 @@ namespace GamePredictor
                     this.PredictGameResult(player1Index, player2Index, out player1PredictedScore, out player2PredictedScore);
                     var predicted = PredictionUtils.GetPlayer1WinMeasure(player1PredictedScore, player2PredictedScore);
 
-                    var actual = game.Player1WinMeasureAdjusted;
+                    var actual = game.Player1WinMeasure;
                     var update = game.Weight * (predicted - actual) * predicted * (1 - predicted);
                     var regularization1 = regularizationFactor * (this.ratings[player1Index] - neighbourRatingsAverage[player1Index]) / this.players.GameCount[player1Index];
                     var regularization2 = regularizationFactor * (this.ratings[player2Index] - neighbourRatingsAverage[player2Index]) / this.players.GameCount[player2Index];
