@@ -18,6 +18,8 @@ namespace GamePredictor
         public bool? IsWinningTeamHome { get; private set; }
         public int? OvertimePeriods { get; private set; }
 
+        private const double HomeAdvantageFactor = 0;   // 0.0838371309618372;
+
         public BasketballGame(string[] valueColumns, string[] headerColumns)
         {
             for(var headerIndex = 0; headerIndex < headerColumns.Length; headerIndex++)
@@ -53,8 +55,8 @@ namespace GamePredictor
             this.Player1WinMeasure = GetWinMeasure(this.Player1Score, this.Player2Score);
 
             //Below value is found by trial & error
-            this.Player1ScoreAdusted = this.IsWinningTeamHome.IsTrue() ? (1 - 0.0838371309618372) * this.Player1Score : this.Player1Score;
-            this.Player2ScoreAdusted = this.IsWinningTeamHome.IsFalse() ? (1 - 0.0838371309618372) * this.Player2Score : this.Player2Score;
+            this.Player1ScoreAdusted = this.IsWinningTeamHome.IsTrue() ? (1 - HomeAdvantageFactor) * this.Player1Score : this.Player1Score;
+            this.Player2ScoreAdusted = this.IsWinningTeamHome.IsFalse() ? (1 - HomeAdvantageFactor) * this.Player2Score : this.Player2Score;
             this.Player1WinMeasureAdjusted = GetWinMeasure(this.Player1ScoreAdusted, this.Player2ScoreAdusted);
             this.Player1HasAdvantage = this.IsWinningTeamHome;
         }
