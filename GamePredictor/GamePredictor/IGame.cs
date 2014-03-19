@@ -8,13 +8,17 @@ namespace GamePredictor
 {
     public interface IGame
     {
-       string Player1Id {get;}
-       string Player2Id { get; }
+        string Player1Id {get;}
+        string Player2Id { get; }
         /// <summary>
         /// Number between 0 to 1 inclusive. If player 1 is true winner then 1, true looser then 0, 0.5 for draw.
         /// </summary>
-       double ResultForPlayer1 {get;}
-       double Weight {get;}
+        double Player1WinMeasure {get;}
+
+        double Player1Score { get; }
+        double Player2Score { get; }
+
+        double Weight {get;}
         /// <summary>
         /// Sometimes player have advantage in game, for example, white in chess or home team in baseball.
         /// Below number is between -ve to +ve infinity that is a boost in player's rating for this game. If not used, set to 0.
@@ -22,6 +26,9 @@ namespace GamePredictor
         /// 1. Get difference of average game outcomes for games with advantage and without advantage.
         /// 2. Get the rating difference by solving logistic equation.
         /// </summary>
-       bool? Player1HasAdvantage {get;}
+        double Player1ScoreAdusted { get; }
+        double Player2ScoreAdusted { get; }
+        double Player1WinMeasureAdjusted { get; }
+        bool? Player1HasAdvantage { get; }
     }
 }

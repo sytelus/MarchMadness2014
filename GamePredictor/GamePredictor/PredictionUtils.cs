@@ -16,12 +16,19 @@ namespace GamePredictor
             var errorStats = new PredictionErrorStats();
             foreach (var testGame in testGames)
             {
-                var predicted = predictor.PredictGameResult(testGame.Player1Id, testGame.Player2Id);
-                var actual = testGame.ResultForPlayer1;
+                double player1PredictedScore, player2PredictedScore;
+                predictor.PredictGameResult(testGame.Player1Id, testGame.Player2Id, out player1PredictedScore, out player2PredictedScore);
+                var predicted = GetPlayer1WinMeasure(player1PredictedScore, player2PredictedScore);
+                var actual = testGame.Player1WinMeasure;
                 errorStats.Observe(actual, predicted);
             }
 
             return errorStats;
+        }
+
+        public static double GetPlayer1WinMeasure(double player1PredictedScore, double player2PredictedScore)
+        {
+            return 1 / (1 + Math.Pow(Math.E, player2PredictedScore - player1PredictedScore)); //TODO: accomodate advantage
         }
 
         public static double SweepParameter(IList<IGame> games, double lowR, double highR,

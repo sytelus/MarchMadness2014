@@ -10,9 +10,10 @@ namespace GamePredictor
     public class PlayerProfile
     {
         readonly IDictionary<string, int> playerIndices;
-        readonly double[] neighbourWeightedRatingsSum;
-        public readonly double[] NeighbourWeightSum;
-        public readonly double[] NeighbourWeightedAverage;
+
+        public readonly double[] GameCount;
+        public readonly double[] ScoreSum;
+        public readonly double[] ScoreAverage;
 
         public PlayerProfile(IList<IGame> games)
         {
@@ -24,9 +25,26 @@ namespace GamePredictor
                 this.playerIndices.AddOrGetValue(game.Player2Id, () => playerIndices.Count);
             }
 
-            this.neighbourWeightedRatingsSum = new double[this.playerIndices.Count];
-            this.NeighbourWeightSum = new double[this.playerIndices.Count];
-            this.NeighbourWeightedAverage = new double[this.playerIndices.Count];
+            this.GameCount = new double[this.playerIndices.Count];
+
+            this.ScoreSum = new double[this.playerIndices.Count];
+            this.ScoreAverage = new double[this.playerIndices.Count];
+
+            for (var gameIndex = 0; gameIndex < games.Count; gameIndex++)
+            {
+                var game = games[gameIndex];
+                var player1Index = this.playerIndices[game.Player1Id];
+                var player2Index = this.playerIndices[game.Player2Id];
+
+                this.ScoreSum[player1Index] += game.Weight * game.Player1Score;
+                this.ScoreSum[player2Index] += game.Weight * game.Player2Score;
+
+                this.GameCount[player1Index] += game.Weight;
+                this.GameCount[player2Index] += game.Weight;
+            }
+
+            for (var playerIndex = 0; playerIndex < this.playerIndices.Count; playerIndex++)
+                this.ScoreAverage[playerIndex] = this.ScoreSum[playerIndex] / GameCount[playerIndex];
         }
 
         public int PlayerCount
@@ -37,27 +55,6 @@ namespace GamePredictor
         public int this[string playerId]
         {
             get { return this.playerIndices[playerId]; }
-        }
-
-        public void CalculateNeighbourAverage(IList<IGame> games, double[] ratings)
-        {
-            Utils.InitializeArrayElement(neighbourWeightedRatingsSum, 0);
-            Utils.InitializeArrayElement(NeighbourWeightSum, 0);
-
-            for (var gameIndex = 0; gameIndex < games.Count; gameIndex++)
-            {
-                var game = games[gameIndex];
-                var player1Index = this.playerIndices[game.Player1Id];
-                var player2Index = this.playerIndices[game.Player2Id];
-
-                this.NeighbourWeightSum[player1Index] += game.Weight;
-                this.NeighbourWeightSum[player2Index] += game.Weight;
-                this.neighbourWeightedRatingsSum[player1Index] += game.Weight * ratings[player2Index];
-                this.neighbourWeightedRatingsSum[player2Index] += game.Weight * ratings[player1Index];
-            }
-
-            for (var playerIndex = 0; playerIndex < this.playerIndices.Count; playerIndex++)
-                this.NeighbourWeightedAverage[playerIndex] = neighbourWeightedRatingsSum[playerIndex] / NeighbourWeightSum[playerIndex];
         }
     }
 }

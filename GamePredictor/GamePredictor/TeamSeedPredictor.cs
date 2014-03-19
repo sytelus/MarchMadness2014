@@ -19,9 +19,11 @@ namespace GamePredictor
             
         }
 
-        public double PredictGameResult(string player1Id, string player2Id, double player1Advantage = 0)
+        public void PredictGameResult(string player1Id, string player2Id, out double player1ScorePrediction, out double player2ScorePrediction)
         {
-            return 0.5 + 0.03 * (this.teamSeeds[player2Id] - this.teamSeeds[player1Id]);
+            player1ScorePrediction = this.teamSeeds[player1Id];
+            player2ScorePrediction = this.teamSeeds[player2Id];
+            //0.5 + 0.03 * (this.teamSeeds[player2Id] - this.teamSeeds[player1Id]);
         }
     }
 }

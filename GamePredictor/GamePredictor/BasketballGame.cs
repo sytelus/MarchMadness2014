@@ -47,9 +47,21 @@ namespace GamePredictor
 
             this.Player1Id = this.WinningTeamID.ToStringInvariant();
             this.Player2Id = this.LoosingTeamID.ToStringInvariant();
-            this.ResultForPlayer1 = 1 / (1 + Math.Pow(Math.E, -(this.WinningTeamScore - this.LoosingTeamScore)));
+
+            this.Player1Score = this.WinningTeamScore;
+            this.Player2Score = this.LoosingTeamScore;
+            this.Player1WinMeasure = GetWinMeasure(this.Player1Score, this.Player2Score);
+
             //Below value is found by trial & error
-            this.Player1HasAdvantage = this.IsWinningTeamHome; // this.IsWinningTeamHome.IsTrue() ? -0.3 : 0;// (this.IsWinningTeamHome.IsFalse() ? 0.3 : 0);
+            this.Player1ScoreAdusted = this.IsWinningTeamHome.IsTrue() ? (1 - 0.0838371309618372) * this.Player1Score : this.Player1Score;
+            this.Player2ScoreAdusted = this.IsWinningTeamHome.IsFalse() ? (1 - 0.0838371309618372) * this.Player2Score : this.Player2Score;
+            this.Player1WinMeasureAdjusted = GetWinMeasure(this.Player1ScoreAdusted, this.Player2ScoreAdusted);
+            this.Player1HasAdvantage = this.IsWinningTeamHome;
+        }
+
+        private double GetWinMeasure(double winningTeamScore, double loosingTeamScore)
+        {
+            return 1 / (1 + Math.Pow(Math.E, -(winningTeamScore - loosingTeamScore)));
         }
 
         private int? ParseOvertimePeriods(string value)
@@ -75,12 +87,18 @@ namespace GamePredictor
         #region IGame
         public string Player1Id {get; private set; }
         public string Player2Id { get; private set; }
-        public double ResultForPlayer1 { get; private set; }
+        public double Player1WinMeasure { get; private set; }
+        public double Player1Score { get; private set; }
+        public double Player2Score { get; private set; }
+
         public double Weight
         {
             get { return 1; }
         }
 
+        public double Player1ScoreAdusted { get; private set; }
+        public double Player2ScoreAdusted { get; private set; }
+        public double Player1WinMeasureAdjusted { get; private set; }
         public bool? Player1HasAdvantage { get; private set; }
         #endregion
     }

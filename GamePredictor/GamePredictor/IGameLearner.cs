@@ -9,6 +9,7 @@ namespace GamePredictor
     public interface IGameLearner
     {
         void Train(IList<IGame> games);
-        double PredictGameResult(string player1Id, string player2Id, double player1Advantage = 0);
+
+        void PredictGameResult(string player1Id, string player2Id, out double player1ScorePrediction, out double player2ScorePrediction);
     }
 }

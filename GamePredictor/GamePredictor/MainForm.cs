@@ -24,7 +24,7 @@ namespace GamePredictor
             var rmseBySeasons = new Dictionary<string, PredictionErrorStats>();
             foreach(var seasonGamesKvp in tourneyGamesBySeasons.GamesBySeasons)
             {
-                var predictor = new EloPlusPlusLearner(player1Advantage: -0.0105263157894739); // new TeamSeedPredictor(this.teamSeedsBySeason[seasonGamesKvp.Key]);
+                var predictor = new EloPlusPlusLearner(); // new TeamSeedPredictor(this.teamSeedsBySeason[seasonGamesKvp.Key]);
                 var trainGames = regularGamesBySeasons.GamesBySeasons[seasonGamesKvp.Key];
                 var testGames = seasonGamesKvp.Value;
                 var errorStats = PredictionUtils.GetPredictionErrorStats(trainGames, testGames, predictor);
@@ -70,27 +70,52 @@ namespace GamePredictor
             MessageBox.Show(optimalRs.Average().ToString());
         }
 
-        private double RatingBoostForHomeTeam(IList<BasketballGame> games)
+        private double ScoreBoostForHomeTeam(IList<IGame> games)
         {
-            var avgOutComeForHomeTeam = games.Where(g => g.IsWinningTeamHome.IsTrue()).Average(g => g.ResultForPlayer1);
-            var avgOutComeForAwayTeam = games.Where(g => g.IsWinningTeamHome.IsFalse()).Average(g => g.ResultForPlayer1);
+            var players = new PlayerProfile(games);
+            double homeTeamScoreSums = 0d, notHomeTeamScoreSums = 0d;
+            int homeTeamScoreCount = 0, notHomeTeamScoreCount = 0;
 
-            return avgOutComeForHomeTeam - avgOutComeForAwayTeam;
+            foreach (var game in games)
+            {
+                if (game.Player1HasAdvantage.IsTrue())
+                {
+                    homeTeamScoreCount++;
+                    homeTeamScoreSums += game.Player1Score;
+
+                    notHomeTeamScoreCount++;
+                    notHomeTeamScoreSums += game.Player2Score;
+                }
+                else if (game.Player1HasAdvantage.IsFalse())
+                {
+                    homeTeamScoreCount++;
+                    homeTeamScoreSums += game.Player2Score;
+
+                    notHomeTeamScoreCount++;
+                    notHomeTeamScoreSums += game.Player1Score;
+                }
+                else
+                {
+                    notHomeTeamScoreCount++;
+                    notHomeTeamScoreSums += game.Player1Score;
+
+                    notHomeTeamScoreCount++;
+                    notHomeTeamScoreSums += game.Player2Score;
+                }
+            }
+
+            var averageHomeTeamScore = homeTeamScoreSums/homeTeamScoreCount;
+            var averageNotHomeTeamScore = notHomeTeamScoreSums / notHomeTeamScoreCount;
+
+            return (averageHomeTeamScore - averageNotHomeTeamScore)/averageNotHomeTeamScore;
         }
 
         private void buttonHomeAdvantage_Click(object sender, EventArgs e)
         {
             var boost = this.regularGamesBySeasons.GamesBySeasons.Values.Select(games => games.Select(g => (BasketballGame)g).ToArray())
-                .Select(games => RatingBoostForHomeTeam(games))
+                .Select(games => ScoreBoostForHomeTeam(games))
                 .Average();
             MessageBox.Show(boost.ToStringInvariant());
-        }
-
-        private void buttonCalibrateHomeAdvantage_Click(object sender, EventArgs e)
-        {
-            var optimalRs = regularGamesBySeasons.GamesBySeasons.Values
-                .Select(gs => PredictionUtils.SweepParameter(gs, -4, 4, (r) => new EloPlusPlusLearner(player1Advantage: r))).ToArray();
-            MessageBox.Show(optimalRs.Average().ToString());
         }
     }
 }

@@ -13,9 +13,10 @@ namespace GamePredictor
         {
         }
 
-        public double PredictGameResult(string player1Id, string player2Id, double player1Advantage = 0)
+        public void PredictGameResult(string player1Id, string player2Id, out double player1ScorePrediction, out double player2ScorePrediction)
         {
-            return 0.5;
+            player1ScorePrediction = 0.5;
+            player2ScorePrediction = 0.5;
         }
     }
 }

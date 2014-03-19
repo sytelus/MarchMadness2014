@@ -7,134 +7,125 @@ namespace GamePredictor.IncrementalSvd
     partial class SFLearner : IGameLearner
     {
         #region Parameters
-        public readonly static int SVCount = 1;
-        public readonly static int SVCountForL2 = 64;    //5 seems to be the best
-        public static readonly float RegularizationConstant = 0.015f; //default 0.015f
-        public static float LearningRate = 0.001f; //default 0.001f
-        public static float LearningRateForL2 = 0.001f; //default 0.001f -- doesn't seem to affect if you lower by 1/20th
-        public static float SVInitial = 0.1f; //default 0.1f
-        public static int MaxEpochs = 128;
+        public const int SvCount = 1;
+        public const double Regularization = 0.015f; //default 0.015f
+        public const double LearningRate = 0.001f; //default 0.001f
+        public const double SvInitial = 0.1f; //default 0.1f
+        public const int MaxEpochs = 128;
         #endregion
 
         public double[,] S1Vectors;
         public double[,] S2Vectors;
-        private PlayerProfile playerProfile;
-        private double[] tempPredictions;
+        private PlayerProfile players;
+        private double[] tempPlayer1Predictions;
+        private double[] tempPlayer2Predictions;
 
-        void InitializeS1S2(PlayerProfile players)
+        void Initialize(IList<IGame> games)
         {
-            this.S1Vectors = new double[players.PlayerCount, SVCount];
-            this.S2Vectors = new double[players.PlayerCount, SVCount];
+            this.players = new PlayerProfile(games);
 
-            Utils.InitializeArrayElement(this.S1Vectors, SVInitial);
-            Utils.InitializeArrayElement(this.S2Vectors, SVInitial);
+            this.S1Vectors = new double[players.PlayerCount, SvCount];
+            this.S2Vectors = new double[players.PlayerCount, SvCount];
+
+            Utils.InitializeArrayElement(this.S1Vectors, SvInitial);
+            Utils.InitializeArrayElement(this.S2Vectors, SvInitial);
+
+            InitializeTempPredictions(this.players, games, out this.tempPlayer1Predictions, out this.tempPlayer2Predictions);
         }
 
-        //void InitializeTempPredictions(LearningData learningData)
-        //{
-        //    if ((this.tempPredictions == null) || (this.tempPredictions.Length != learningData.Data.DataCount))
-        //        this.tempPredictions = new float[learningData.Data.DataCount];
+        private static void InitializeTempPredictions(PlayerProfile players, IList<IGame> games,
+            out double[] tempPlayer1Predictions, out double[] tempPlayer2Predictions)
+        {
+            tempPlayer1Predictions = new double[players.PlayerCount];
+            tempPlayer2Predictions = new double[players.PlayerCount];
 
-        //    for (var dataIndex = 0; dataIndex < learningData.Data.DataCount; dataIndex++)
-        //    {
-        //        this.tempPredictions[dataIndex] = learningData.ItemProfiles.X2Avg[learningData.Data.X2[dataIndex]]
-        //             + learningData.ItemProfiles.X1AvgBias[learningData.Data.X1[dataIndex]];
-        //    }
-        //}
+            for (var gameIndex = 0; gameIndex < games.Count; gameIndex++)
+            {
+                var player1Index = players[games[gameIndex].Player1Id];
+                var player2Index = players[games[gameIndex].Player2Id];
+
+                //TODO: what about bias
+                tempPlayer1Predictions[gameIndex] = players.ScoreAverage[player1Index];
+                tempPlayer2Predictions[gameIndex] = players.ScoreAverage[player2Index];    
+            }
+        }
 
         public void Train(IList<IGame> games)
         {
-            this.playerProfile = new PlayerProfile(games);
-            InitializeS1S2(this.playerProfile);
-            //InitializeTempPredictions(learningData);
+            this.Initialize(games);
 
             //for each feature
-            for (var svIndex=0; svIndex < SVCount; svIndex++)
+            for (var svIndex = 0; svIndex < SvCount; svIndex++)
             {
-                for (var ephochIndex = 0; ephochIndex < MaxEpochs; ephochIndex++) // && (rmse - prevRmse > _improvementExitThreshold)
-                    RunEpoch(svIndex, ephochIndex, games); 
+                for (var ephochIndex = 0; ephochIndex < MaxEpochs; ephochIndex++)   // && (rmse - prevRmse > _improvementExitThreshold)
+                {
+                    RunEpoch(svIndex, games, true);
+                    RunEpoch(svIndex, games, false);
+                }
 
-                //UpdateTempPredictions(svIndex, learningData);
+                this.UpdateTempPredictions(svIndex, games);
             }//All SVs done
         }
 
-        private double RunEpoch(int svIndex, int epochIndex, IList<IGame> games)
+        private void RunEpoch(int svIndex, IEnumerable<IGame> games, bool forPlayer1)
         {
-            double predictionErrorSquareSum = 0, learningRate = LearningRate
-                , regularizationConstant = RegularizationConstant;
-
-            #region Perf Loop
-            for (var dataIndex = 0; dataIndex < games.Count; dataIndex++)
+            foreach (var game in games)
             {
-                var x1 = this.playerProfile[games[dataIndex].Player1Id];
-                var x2 = this.playerProfile[games[dataIndex].Player2Id];
+                var x1 = this.players[game.Player1Id];
+                var x2 = this.players[game.Player2Id];
 
-                var s1Value = this.S1Vectors[x1, svIndex];
-                var s2Value = this.S2Vectors[x2, svIndex];
-
-                #region Inilined version of PredictRating
-                // Get cached value for old features or default to an average
-                var predictedValue = this.tempPredictions[dataIndex];
-
-                // Add contribution of current feature
-                predictedValue = predictedValue + (s1Value * s2Value);
-                #endregion
-
-                var err = games[dataIndex].ResultForPlayer1 - predictedValue;
-
-                //Save old feature values before changing them
-                var x1Increment = learningRate * ((err * s2Value) - (regularizationConstant * s1Value));
-                var x2Increment = learningRate * ((err * s1Value) - (regularizationConstant * s2Value));
-
-                //Update local variable instead of local to avoid contention
-                predictionErrorSquareSum += err*err;
-
-                // Cross-train the features using saved values
-                this.S1Vectors[x1, svIndex] += x1Increment;
-                this.S2Vectors[x2, svIndex] += x2Increment;
+                if (forPlayer1)
+                    UpdateSvdVectors(svIndex, x1, x2, this.tempPlayer1Predictions[x1], game.Player1Score);
+                else
+                    UpdateSvdVectors(svIndex, x2, x1, this.tempPlayer1Predictions[x2], game.Player2Score);
             }
-            #endregion
+        }
 
-            return predictionErrorSquareSum;
+        private void UpdateSvdVectors(int svIndex, int x1, int x2, double tempPrediction, double actualValue)
+        {
+            var s1Value = this.S1Vectors[x1, svIndex];
+            var s2Value = this.S2Vectors[x2, svIndex];
+
+            tempPrediction += (s1Value * s2Value);
+
+            var err = actualValue - tempPrediction;
+
+            //Save old feature values before changing them
+            var x1Increment = LearningRate*((err*s2Value) - (Regularization*s1Value));
+            var x2Increment = LearningRate*((err*s1Value) - (Regularization*s2Value));
+
+            // Cross-train the features using saved values
+            this.S1Vectors[x1, svIndex] += x1Increment;
+            this.S2Vectors[x2, svIndex] += x2Increment;
         }
 
         private void UpdateTempPredictions(int svIndex, IList<IGame> games)
         {
-            var dataCount = games.Count;
-            var svCount = SVCount;
-
-            #region Update predictions
-            // Save predictions for this feature
-            for (var dataIndex = 0; dataIndex < dataCount; dataIndex++)
+            for (var gameIndex = 0; gameIndex < games.Count; gameIndex++)
             {
-                var x1 = this.playerProfile[games[dataIndex].Player1Id];
-                var x2 = this.playerProfile[games[dataIndex].Player2Id];
-                                   
-                var predictedValue = this.tempPredictions[dataIndex];
-                if (predictedValue > 5) predictedValue = 5;
-                else if (predictedValue < 1) predictedValue = 1;
+                var game = games[gameIndex];
+                var x1 = this.players[game.Player1Id];
+                var x2 = this.players[game.Player2Id];
 
-                predictedValue += this.S1Vectors[x1, svIndex] * this.S2Vectors[x2, svIndex];
-
-                this.tempPredictions[dataIndex] = predictedValue;
+                //TODO: limit predicted value?
+                this.tempPlayer1Predictions[gameIndex] += this.S1Vectors[x1, svIndex] * this.S2Vectors[x2, svIndex];
+                this.tempPlayer2Predictions[gameIndex] += this.S1Vectors[x2, svIndex] * this.S2Vectors[x1, svIndex];
             }
-            #endregion
         }
 
-        public double PredictGameResult(string player1Id, string player2Id, double player1Advantage = 0)
+        public void PredictGameResult(string player1Id, string player2Id, out double player1ScorePrediction, out double player2ScorePrediction)
         {
-            var x1 = this.playerProfile[player1Id];
-            var x2 = this.playerProfile[player2Id];
+            var x1 = this.players[player1Id];
+            var x2 = this.players[player2Id];
 
-            var predictedValue = 0d; //TODO: learningData.ItemProfiles.X2Avg[x2] + learningData.ItemProfiles.X1AvgBias[x1]; //1; 
-
-            for (var svIndex = 0; svIndex <= SVCount; svIndex++)
+            player1ScorePrediction = this.players.ScoreAverage[x1];
+            player2ScorePrediction = this.players.ScoreAverage[x2];
+            for (var svIndex = 0; svIndex <= SvCount; svIndex++)
             {
-                predictedValue += (this.S1Vectors[x1, svIndex] * this.S2Vectors[x2, svIndex]);
                 //TODO: limit values
+                player1ScorePrediction += (this.S1Vectors[x1, svIndex] * this.S2Vectors[x2, svIndex]);
+                player2ScorePrediction += (this.S1Vectors[x2, svIndex] * this.S2Vectors[x1, svIndex]);  
             }
-
-            return predictedValue;
         }
     }
 }
