@@ -14,6 +14,7 @@ namespace GamePredictor
         public readonly double[] GameCount;
         public readonly double[] ScoreSum;
         public readonly double[] ScoreAverage;
+        public readonly double MinScore = double.PositiveInfinity, MaxScore = double.NegativeInfinity, MaxMinScoreDifference;
 
         public PlayerProfile(IList<IGame> games)
         {
@@ -23,7 +24,12 @@ namespace GamePredictor
                 var game = games[gameIndex];
                 this.playerIndices.AddOrGetValue(game.Player1Id, () => playerIndices.Count);
                 this.playerIndices.AddOrGetValue(game.Player2Id, () => playerIndices.Count);
+
+                this.MinScore = Math.Min(Math.Min(game.Player1Score, this.MinScore), game.Player2Score);
+                this.MaxScore = Math.Max(Math.Max(game.Player1Score, this.MaxScore), game.Player2Score);
             }
+
+            this.MaxMinScoreDifference = this.MaxScore - this.MinScore;
 
             this.GameCount = new double[this.playerIndices.Count];
 

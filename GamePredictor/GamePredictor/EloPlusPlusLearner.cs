@@ -11,7 +11,7 @@ namespace GamePredictor
     {
         double[] ratings;
 
-        public const int DefaultMaxIterations = 100; //400 optimal for NCAA baseball, 50 for Chase
+        public const int DefaultMaxIterations = 400; //400 optimal for NCAA baseball, 50 for Chase
         public const int RansomSeed = 42;
         public const double DefaultRegularizationFactor = 0.2256;
 

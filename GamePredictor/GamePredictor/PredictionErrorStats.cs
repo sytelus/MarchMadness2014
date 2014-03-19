@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -16,6 +17,13 @@ namespace GamePredictor
         {
             totalErrorSquare += (actual - predicted) * (actual - predicted);
             totalLogLoss += actual * Math.Log(predicted) + (1 - actual) * Math.Log(1 - predicted);
+
+            if (double.IsNaN(totalLogLoss))
+            {
+                Debugger.Break();
+                throw new ArgumentException("LogLoss has became NaN");
+            }
+
             count++;
         }
 

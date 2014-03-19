@@ -16,14 +16,33 @@ namespace GamePredictor
             var errorStats = new PredictionErrorStats();
             foreach (var testGame in testGames)
             {
-                double player1PredictedScore, player2PredictedScore;
-                predictor.PredictGameResult(testGame.Player1Id, testGame.Player2Id, out player1PredictedScore, out player2PredictedScore);
-                var predicted = GetPlayer1WinMeasure(player1PredictedScore, player2PredictedScore);
+                var predicted = PredictGame(predictor, testGame.Player1Id, testGame.Player2Id);
                 var actual = testGame.Player1WinMeasure;
                 errorStats.Observe(actual, predicted);
             }
 
             return errorStats;
+        }
+
+        public static double PredictGame(IGameLearner predictor, string player1Id, string player2Id)
+        {
+            double player1PredictedScore, player2PredictedScore;
+            return PredictGame(predictor, player1Id, player2Id, out player1PredictedScore, out player2PredictedScore);
+        }
+        public static double PredictGame(IGameLearner predictor, string player1Id, string player2Id,
+            out double player1PredictedScore, out double player2PredictedScore)
+        {
+            predictor.PredictGameResult(player1Id, player2Id, out player1PredictedScore, out player2PredictedScore);
+            var predicted = GetPlayer1WinMeasure(player1PredictedScore, player2PredictedScore);
+
+            predicted = Clip(predicted);
+
+            return predicted;
+        }
+
+        public static double Clip(double value, double min = 0.001, double max = 0.999)
+        {
+            return Math.Max(min, Math.Min(value, max));
         }
 
         public static double GetPlayer1WinMeasure(double player1PredictedScore, double player2PredictedScore)

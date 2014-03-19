@@ -50,9 +50,10 @@ namespace GamePredictor
             this.Player1Id = this.WinningTeamID.ToStringInvariant();
             this.Player2Id = this.LoosingTeamID.ToStringInvariant();
 
+            this.Player1WinMeasure = GetWinMeasure(this.WinningTeamScore, this.LoosingTeamScore);
+
             this.Player1Score = this.WinningTeamScore;
             this.Player2Score = this.LoosingTeamScore;
-            this.Player1WinMeasure = GetWinMeasure(this.Player1Score, this.Player2Score);
 
             //Below value is found by trial & error
             this.Player1ScoreAdusted = this.IsWinningTeamHome.IsTrue() ? (1 - HomeAdvantageFactor) * this.Player1Score : this.Player1Score;
@@ -61,9 +62,16 @@ namespace GamePredictor
             this.Player1HasAdvantage = this.IsWinningTeamHome;
         }
 
-        private double GetWinMeasure(double winningTeamScore, double loosingTeamScore)
+        private static double GetWinMeasure(double winningTeamScore, double loosingTeamScore)
         {
-            return 1 / (1 + Math.Pow(Math.E, -(winningTeamScore - loosingTeamScore)));
+            //For most of the games ration W/ (W + L) is very close to 0.5 indicating scores were very similar. Below eq models the fact 
+            //that it is exponentially more difficult to generate the score difference.
+            return Logistic(winningTeamScore - loosingTeamScore);
+        }
+
+        private static double Logistic(double value)
+        {
+            return 1 / (1 + Math.Pow(Math.E, -value));
         }
 
         private int? ParseOvertimePeriods(string value)

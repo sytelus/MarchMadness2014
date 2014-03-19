@@ -117,5 +117,65 @@ namespace GamePredictor
                 .Average();
             MessageBox.Show(boost.ToStringInvariant());
         }
+
+        private void buttonGeneratePredictions_Click(object sender, EventArgs e)
+        {
+            var predictor = new EloPlusPlusLearner();
+            var trainGames = regularGamesBySeasons.GamesBySeasons["S"];
+            predictor.Train(trainGames);
+
+            var sampleSubmissionLines = File.ReadAllLines(@"..\..\..\..\data\kaggle\sample_submission.csv");
+            var predictionLines = sampleSubmissionLines.Skip(1)
+                .Select(line => line.Split(Utils.CommaDelimiter)[0].Split(Utils.UnderscoreDelimiter))
+                .Select(teamIds => string.Concat(teamIds.ToDelimitedString("_"), ",",
+                    PredictionUtils.PredictGame(predictor, teamIds[1], teamIds[2]).ToStringInvariant()))
+                .ToList();
+
+            predictionLines.Insert(0, sampleSubmissionLines[0]);
+
+            File.WriteAllLines(@"..\..\..\..\data\predictions\kaggle.csv", predictionLines.ToArray());
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            var predictor = new EloPlusPlusLearner();
+            var trainGames = regularGamesBySeasons.GamesBySeasons["S"];
+            predictor.Train(trainGames);
+
+            var slots = File.ReadAllLines(@"..\..\..\..\data\kaggle\tourney_slots2.csv").Skip(1)
+                .Select(line => line.Split(Utils.CommaDelimiter))
+                .Select(c => new {Season = c[0], Slot = c[1], StrongSeed = c[2], WeekSeed = c[3]})
+                .Where(s => s.Season == "S")
+                .ToList(); 
+            var teams = File.ReadAllLines(@"..\..\..\..\data\kaggle\teams.csv").Skip(1)
+                .Select(line => line.Split(Utils.CommaDelimiter))
+                .Select(c => new KeyValuePair<string,string>(c[0], c[1]))
+                .ToDictionary();
+            var seeds = File.ReadAllLines(@"..\..\..\..\data\kaggle\tourney_seeds.csv").Skip(1)
+                .Select(line => line.Split(Utils.CommaDelimiter))
+                .Select(c => new {Season = c[0], Seed = c[1], TeamId = c[2]})
+                .Where(s => s.Season == "S")
+                .ToDictionary(s => s.Seed, s => s.TeamId);
+
+            var outputLines = new List<string>();
+            for (var slotIndex = 0; slotIndex < slots.Count; slotIndex++)
+            {
+                var slot = slots[slotIndex];
+                var sTeamId = seeds[slot.StrongSeed];
+                var wTeamId = seeds[slot.WeekSeed];
+                var sTeamName = teams[sTeamId];
+                var wTeamName = teams[wTeamId];
+
+                double player1PredictedScore, player2PredictedScore;
+                var gameResult = PredictionUtils.PredictGame(predictor, sTeamId, wTeamId, out player1PredictedScore, out player2PredictedScore);
+                
+                var winnerTeamId = gameResult >= 0.5 ? sTeamId : wTeamId;
+                var winnerTeamName = gameResult >= 0.5 ? sTeamName : wTeamName;
+                seeds.Add(slot.Slot, winnerTeamId);
+                outputLines.Add(string.Join("\t", sTeamName, wTeamName, winnerTeamName, player1PredictedScore, player2PredictedScore));
+            }
+
+            File.WriteAllLines(@"..\..\..\..\data\predictions\brackets.tsv", outputLines.ToArray());
+        }
     }
 }

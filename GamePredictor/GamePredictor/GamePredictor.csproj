@@ -47,7 +47,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AlwaysDrawPredictor.cs" />
-    <Compile Include="SFLearner.cs" />
+    <Compile Include="SfLearner.cs" />
     <Compile Include="PlayerProfile.cs" />
     <Compile Include="PredictionErrorStats.cs" />
     <Compile Include="EloPlusPlusLearner.cs" />
